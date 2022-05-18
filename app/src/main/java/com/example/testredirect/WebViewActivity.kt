@@ -1,14 +1,17 @@
 package com.example.testredirect
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.provider.Browser
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import java.net.URISyntaxException
 
 
 class WebViewActivity : AppCompatActivity() {
@@ -51,15 +54,55 @@ class WebViewActivity : AppCompatActivity() {
             view: WebView?,
             request: WebResourceRequest?
         ): Boolean {
+            return shouldOverrideUrlLoadingWithBasicIntent(request)
+//             return shouldOverrideUrlLoadingChromeEdition(view, request)
+        }
+
+        private fun shouldOverrideUrlLoadingWithBasicIntent(
+            request: WebResourceRequest?
+        ): Boolean {
             val uri = request?.url
             println("shouldOverrideUrlLoading executing....")
             println(uri)
-            if (uri != null && uri.host?.contains("truelayer") ==  false) {
+            if (uri != null && uri.host?.contains("truelayer") == false) {
                 val intent = Intent(Intent.ACTION_VIEW, uri)
                 startActivity(intent)
                 return true
             }
             return false
+        }
+
+        // Based on https://android.googlesource.com/platform/frameworks/webview/+/4dcabae/chromium/java/com/android/webview/chromium/WebViewContentsClientAdapter.java
+        private fun shouldOverrideUrlLoadingChromeEdition(
+            view: WebView?,
+            request: WebResourceRequest?
+        ): Boolean {
+            val url = request?.url ?: return false
+
+            // Perform generic parsing of the URI to turn it into an Intent.
+            val intent: Intent = try {
+                Intent.parseUri(url.toString(), Intent.URI_INTENT_SCHEME)
+            } catch (ex: URISyntaxException) {
+                print(ex.message)
+                return false
+            }
+            // Sanitize the Intent, ensuring web pages can not bypass browser
+            // security (only access to BROWSABLE activities).
+            intent.addCategory(Intent.CATEGORY_BROWSABLE)
+            intent.component = null
+            // Pass the package name as application ID so that the intent from the
+            // same application can be opened in the same tab.
+            intent.putExtra(
+                Browser.EXTRA_APPLICATION_ID,
+                view!!.context.packageName
+            )
+            try {
+                view.context.startActivity(intent)
+            } catch (ex: ActivityNotFoundException) {
+                print(ex.message)
+                return false
+            }
+            return true
         }
     }
 }
