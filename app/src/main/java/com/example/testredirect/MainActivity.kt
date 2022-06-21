@@ -5,6 +5,7 @@ import android.net.Uri
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.browser.customtabs.CustomTabsIntent
 
@@ -30,8 +31,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         textInput = findViewById(R.id.edit_text_link)
-
-
+        // Default to a TrueLayer page that can easily "trigger" application links from banks
+        textInput.setText("https://payment.truelayer-sandbox.com/test-redirect", TextView.BufferType.EDITABLE)
     }
 
     private fun loadWebView(link: String) {
