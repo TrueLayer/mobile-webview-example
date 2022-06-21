@@ -1,10 +1,15 @@
 package com.example.testredirect
 
-import androidx.appcompat.app.AppCompatActivity
+import android.content.Intent
+import android.graphics.Bitmap
 import android.os.Bundle
+import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
-import android.widget.EditText
+import android.webkit.WebViewClient
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+
 
 class WebViewActivity : AppCompatActivity() {
 
@@ -21,10 +26,48 @@ class WebViewActivity : AppCompatActivity() {
         settings.domStorageEnabled = true
         settings.javaScriptEnabled = true
 
+        webView.webViewClient = webClient
+
         val url = intent.getStringExtra("LINK")
         url?.let {
-            println("Loading WebView")
             webView.loadUrl(it)
+        }
+    }
+
+    fun showMessage(message: String?) {
+        Toast.makeText(this.applicationContext, message, Toast.LENGTH_SHORT)
+    }
+
+    private val webClient = object : WebViewClient() {
+        override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+            super.onPageStarted(view, url, favicon)
+            showMessage(url)
+        }
+
+        // Seems to be only calling when top level URL Change
+        // but not on original load of the WebView ¯\_(ツ)_/¯
+        override fun shouldOverrideUrlLoading(
+            view: WebView?,
+            request: WebResourceRequest?
+        ): Boolean {
+            return shouldOverrideUrlLoadingWithBasicIntent(request)
+        }
+
+        // Alternatively can also create an override following:
+        // Based on https://android.googlesource.com/platform/frameworks/webview/+/4dcabae/chromium/java/com/android/webview/chromium/WebViewContentsClientAdapter.java
+        private fun shouldOverrideUrlLoadingWithBasicIntent(
+            request: WebResourceRequest?
+        ): Boolean {
+            val uri = request?.url
+            println("shouldOverrideUrlLoading executing....")
+            println(uri)
+            // replace "truelayer" with whatever host you expect to load within the webview
+            if (uri != null && uri.host?.contains("truelayer") == false) {
+                val intent = Intent(Intent.ACTION_VIEW, uri)
+                startActivity(intent)
+                return true
+            }
+            return false
         }
     }
 }
