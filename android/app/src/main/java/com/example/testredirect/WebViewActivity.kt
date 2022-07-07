@@ -19,6 +19,7 @@ class WebViewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_web_view)
 
+        // Assuming your view contains a Webview with "myCustomWebView" as Id.
         webView = findViewById(R.id.myCustomWebView)
 
         // Required to load more than just plain html and css
@@ -28,10 +29,9 @@ class WebViewActivity : AppCompatActivity() {
 
         webView.webViewClient = webClient
 
-        val url = intent.getStringExtra("LINK")
-        url?.let {
-            webView.loadUrl(it)
-        }
+        // Default to a TrueLayer page that can easily "trigger" application links from banks
+        val url = "https://payment.truelayer-sandbox.com/test-redirect"
+        webView.loadUrl(url)
     }
 
     fun showMessage(message: String?) {
